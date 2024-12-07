@@ -42,14 +42,11 @@ public class KafkaBeamService {
 
     @PostConstruct
     public void runPipeline() {
-        // Set up pipeline options
         PipelineOptions options = PipelineOptionsFactory.create();
         options.setRunner(DirectRunner.class);
 
-        // Create the pipeline
         Pipeline pipeline = Pipeline.create(options);
 
-        // Read messages from the input Kafka topic
         PCollection<String> messages = pipeline
             .apply(KafkaIO.<String, String>read()
                 .withBootstrapServers(bootstrapServers)
@@ -65,7 +62,6 @@ public class KafkaBeamService {
 
         PCollection<String> oddMessages = messages.apply("FilterOddLength", ParDo.of(new OddLengthFilterFn()));
 
-        // Write even-length messages to the 'even' Kafka topic
         evenMessages.apply("WriteEvenMessagesToKafka", KafkaIO.<String, String>write()
             .withBootstrapServers(bootstrapServers)
             .withTopic(evenTopic)
@@ -73,7 +69,6 @@ public class KafkaBeamService {
             .withValueSerializer(StringSerializer.class)
             .values());
 
-        // Write odd-length messages to the 'odd' Kafka topic
         oddMessages.apply("WriteOddMessagesToKafka", KafkaIO.<String, String>write()
             .withBootstrapServers(bootstrapServers)
             .withTopic(oddTopic)
@@ -81,11 +76,9 @@ public class KafkaBeamService {
             .withValueSerializer(StringSerializer.class)
             .values());
 
-        // Run the pipeline
         new Thread(() -> pipeline.run().waitUntilFinish()).start();
     }
 
-    // Static DoFn for filtering even-length messages
     private static class EvenLengthFilterFn extends DoFn<String, String> {
         @ProcessElement
         public void processElement(@Element String message, OutputReceiver<String> out) {
@@ -111,7 +104,6 @@ public class KafkaBeamService {
     
     private static int calculateAge(String dateOfBirth) {
 		try {
-            // Define the date format (adjust as per your input date format)
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             LocalDate dob = LocalDate.parse(dateOfBirth, formatter);
             return Period.between(dob, LocalDate.now()).getYears();
@@ -121,7 +113,6 @@ public class KafkaBeamService {
         }
 	}
 
-    // Static DoFn for filtering odd-length messages
     private static class OddLengthFilterFn extends DoFn<String, String> {
         @ProcessElement
         public void processElement(@Element String message, OutputReceiver<String> out) {
