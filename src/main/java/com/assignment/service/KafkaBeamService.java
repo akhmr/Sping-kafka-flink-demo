@@ -17,9 +17,12 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.assignment.controller.DataController;
 import com.assignment.controller.Person;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -27,6 +30,9 @@ import jakarta.annotation.PostConstruct;
 
 @Service
 public class KafkaBeamService {
+	
+	private static final Logger logger = LoggerFactory.getLogger(KafkaBeamService.class);
+
 
     @Value("${spring.kafka.topic.input}")
     private String inputTopic;
@@ -79,14 +85,13 @@ public class KafkaBeamService {
         new Thread(() -> pipeline.run().waitUntilFinish()).start();
     }
 
-    private static class EvenLengthFilterFn extends DoFn<String, String> {
+    public static class EvenLengthFilterFn extends DoFn<String, String> {
         @ProcessElement
         public void processElement(@Element String message, OutputReceiver<String> out) {
         	
         	ObjectMapper objectMapper = new ObjectMapper();
         	try {
 				Person person = objectMapper.readValue(message, Person.class);
-				System.out.println("Person = "+person.toString());
 				
 				int age = calculateAge(person.getDateOfBirth());
                 
@@ -108,7 +113,7 @@ public class KafkaBeamService {
             LocalDate dob = LocalDate.parse(dateOfBirth, formatter);
             return Period.between(dob, LocalDate.now()).getYears();
         } catch (Exception e) {
-            System.err.println("Error parsing date of birth: " + e.getMessage());
+        	logger.error("Error {}",e);
             return -1; // Return -1 if parsing fails
         }
 	}
@@ -119,7 +124,6 @@ public class KafkaBeamService {
         	ObjectMapper objectMapper = new ObjectMapper();
         	try {
 				Person person = objectMapper.readValue(message, Person.class);
-				System.out.println("Person = "+person.toString());
 				
 				int age = calculateAge(person.getDateOfBirth());
                 
@@ -127,7 +131,7 @@ public class KafkaBeamService {
 	                out.output("Age is odd and age is ="+age);
 	            }
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Error {}",e);
 				out.output("exception occured");
 			}
         }

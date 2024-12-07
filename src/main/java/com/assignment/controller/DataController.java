@@ -10,9 +10,14 @@ import com.assignment.service.KafkaProducerService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 @RestController
 public class DataController {
+	
+	private static final Logger logger = LoggerFactory.getLogger(DataController.class);
 	
 	@Autowired
 	private KafkaProducerService kafkaProducerService;
@@ -23,8 +28,7 @@ public class DataController {
 	
 	@PostMapping("/send")
     public String sendMessage(@RequestBody Person person) throws JsonProcessingException {
-		
-		System.out.println("Perosn message recived is "+person.toString());
+		logger.info("Person {} ",person);
 		kafkaProducerService.sendToKafka("personTopic", objectMapper.writeValueAsString(person));
         return "Message sent successfully!";
     }
