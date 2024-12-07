@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <!-- Resolve the logging path from Spring Boot properties -->
-    <property name="LOGS" value="/var/logs/assignment" />
+    <property name="LOGS" value="var/logs/assignment" />
 
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">

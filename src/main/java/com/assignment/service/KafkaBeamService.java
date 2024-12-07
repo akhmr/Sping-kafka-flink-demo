@@ -118,7 +118,7 @@ public class KafkaBeamService {
         }
 	}
 
-    private static class OddLengthFilterFn extends DoFn<String, String> {
+    public static class OddLengthFilterFn extends DoFn<String, String> {
         @ProcessElement
         public void processElement(@Element String message, OutputReceiver<String> out) {
         	ObjectMapper objectMapper = new ObjectMapper();
