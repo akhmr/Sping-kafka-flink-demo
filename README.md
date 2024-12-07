@@ -4,9 +4,9 @@ Step  to run the code on the local
 
 Requirement: 
                  1) Install kafka
-                 2  Java 17 minimum
+                 2)  Java 17 minimum
 
-Step 1: Create kafka topic mentioed in application.properties
+Step 1: Create kafka topic mentioned in application.properties
 Step 2: make sure kafka up and running
 Step 3: Chage the log path in logback-spring.xml based on your os. 
         current path given is <property name="LOGS" value="var/logs/assignment" />.You can change it
