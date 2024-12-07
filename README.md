@@ -11,7 +11,7 @@ Requirement:
 
 Step 1: Create kafka topic mentioned in application.properties
 Step 2: make sure kafka up and running
-Step 3: Chage the log path in logback-spring.xml based on your os. 
+Step 3: Change the log path in logback-spring.xml based on your os. 
         current path given is <property name="LOGS" value="var/logs/assignment" />.You can change it
 Step 4: Run the spring boot services .
 
