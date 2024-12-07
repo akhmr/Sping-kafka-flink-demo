@@ -2,11 +2,14 @@ package com.assignment.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.assignment.service.KafkaProducerService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 @RestController
 public class DataController {
@@ -18,15 +21,11 @@ public class DataController {
 	
 	
 	
-	@GetMapping("/send")
-    public String sendMessage() throws JsonProcessingException {
+	@PostMapping("/send")
+    public String sendMessage(@RequestBody Person person) throws JsonProcessingException {
 		
-		Person p = new Person();
-		p.setName("Arvind");
-		p.setAddress("gurgaon");
-		p.setDateOfBirth("20/12/1985");
-		
-		kafkaProducerService.sendToKafka("oddTopic", objectMapper.writeValueAsString(p));
+		System.out.println("Perosn message recived is "+person.toString());
+		kafkaProducerService.sendToKafka("personTopic", objectMapper.writeValueAsString(person));
         return "Message sent successfully!";
     }
 

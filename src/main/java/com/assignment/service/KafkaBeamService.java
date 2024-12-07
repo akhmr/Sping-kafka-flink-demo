@@ -1,5 +1,9 @@
 package com.assignment.service;
 
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+
 import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.kafka.KafkaIO;
@@ -15,6 +19,9 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.assignment.controller.Person;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.annotation.PostConstruct;
 
@@ -32,10 +39,6 @@ public class KafkaBeamService {
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
-
-    // Define TupleTags for the outputs
-    private static final TupleTag<String> EVEN_TAG = new TupleTag<String>() {};
-    private static final TupleTag<String> ODD_TAG = new TupleTag<String>() {};
 
     @PostConstruct
     public void runPipeline() {
@@ -58,10 +61,8 @@ public class KafkaBeamService {
                 .into(TypeDescriptor.of(String.class))
                 .via((kafkaRecord) -> kafkaRecord.getValue()));
 
-        // Filter even-length messages
         PCollection<String> evenMessages = messages.apply("FilterEvenLength", ParDo.of(new EvenLengthFilterFn()));
 
-        // Filter odd-length messages
         PCollection<String> oddMessages = messages.apply("FilterOddLength", ParDo.of(new OddLengthFilterFn()));
 
         // Write even-length messages to the 'even' Kafka topic
@@ -88,31 +89,57 @@ public class KafkaBeamService {
     private static class EvenLengthFilterFn extends DoFn<String, String> {
         @ProcessElement
         public void processElement(@Element String message, OutputReceiver<String> out) {
-            if (message != null && message.length() % 2 == 0) {
-                out.output(message);
-            }
+        	
+        	ObjectMapper objectMapper = new ObjectMapper();
+        	try {
+				Person person = objectMapper.readValue(message, Person.class);
+				System.out.println("Person = "+person.toString());
+				
+				int age = calculateAge(person.getDateOfBirth());
+                
+				if (age != -1 && age % 2 == 0) {
+	                out.output("Age is even and age is ="+age);
+	            }
+			} catch (Exception e) {
+				e.printStackTrace();
+				out.output("exception occured");
+			}
+            
         }
+
     }
+    
+    private static int calculateAge(String dateOfBirth) {
+		try {
+            // Define the date format (adjust as per your input date format)
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            LocalDate dob = LocalDate.parse(dateOfBirth, formatter);
+            return Period.between(dob, LocalDate.now()).getYears();
+        } catch (Exception e) {
+            System.err.println("Error parsing date of birth: " + e.getMessage());
+            return -1; // Return -1 if parsing fails
+        }
+	}
 
     // Static DoFn for filtering odd-length messages
     private static class OddLengthFilterFn extends DoFn<String, String> {
         @ProcessElement
         public void processElement(@Element String message, OutputReceiver<String> out) {
-            if (message != null && message.length() % 2 != 0) {
-                out.output(message);
-            }
+        	ObjectMapper objectMapper = new ObjectMapper();
+        	try {
+				Person person = objectMapper.readValue(message, Person.class);
+				System.out.println("Person = "+person.toString());
+				
+				int age = calculateAge(person.getDateOfBirth());
+                
+				if (age != -1 && age % 2 != 0) {
+	                out.output("Age is odd and age is ="+age);
+	            }
+			} catch (Exception e) {
+				e.printStackTrace();
+				out.output("exception occured");
+			}
         }
     }
 
-    // Static DoFn for splitting messages into even and odd based on their length
-    private static class SplitMessagesDoFn extends DoFn<String, String> {
-        @ProcessElement
-        public void processElement(@Element String message, MultiOutputReceiver out) {
-            if (message.length() % 2 == 0) {
-                out.get(EVEN_TAG).output(message);  // Output to 'even' side
-            } else {
-                out.get(ODD_TAG).output(message);   // Output to 'odd' side
-            }
-        }
-    }
 }
